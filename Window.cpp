@@ -26,6 +26,9 @@ platform_window_t* Window::create_window(const std::string& title, unsigned int 
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.lpszClassName = window_class.c_str();
     RegisterClass(&wc);
+    ///
+    /// End of Register Window Class
+    ///
 
     DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 

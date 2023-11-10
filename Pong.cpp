@@ -29,23 +29,8 @@
  /// OpenGL functions declarations
  ///
 
-PFNGLCREATEPROGRAMPROC glCreateProgram = nullptr;
-PFNGLCREATESHADERPROC glCreateShader = nullptr;
-PFNGLSHADERSOURCEPROC glShaderSource = nullptr;
-PFNGLCOMPILESHADERPROC glCompileShader = nullptr;
-PFNGLGETSHADERIVPROC glGetShaderiv = nullptr;
-PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog = nullptr;
-PFNGLATTACHSHADERPROC glAttachShader = nullptr;
-PFNGLLINKPROGRAMPROC glLinkProgram = nullptr;
-PFNGLGETPROGRAMIVPROC glGetProgramiv = nullptr;
-PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog = nullptr;
-PFNGLUSEPROGRAMPROC glUseProgram = nullptr;
-PFNGLGENBUFFERSPROC glGenBuffers = nullptr;
-PFNGLBINDBUFFERPROC glBindBuffer = nullptr;
-PFNGLBUFFERDATAPROC glBufferData = nullptr;
-PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation = nullptr;
-PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = nullptr;
-PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = nullptr;
+
+
 
 bool InitializeShaders()
 {
@@ -75,7 +60,7 @@ bool InitializeShaders()
 		},
 	};
 
-	GLuint program = glCreateProgram();
+	GLuint program = GL::CreateProgram();
 
 	for (const auto& s : shaders) {
 		GLenum type = s.first;
@@ -83,20 +68,20 @@ bool InitializeShaders()
 
 		const GLchar* src = source.c_str();
 
-		GLuint shader = glCreateShader(type);
-		glShaderSource(shader, 1, &src, nullptr);
+		GLuint shader = GL::CreateShader(type);
+		GL::ShaderSource(shader, 1, &src, nullptr);
 
-		glCompileShader(shader);
+		GL::CompileShader(shader);
 
 		GLint compiled = 0;
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+		GL::GetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
 		if (!compiled) {
 			GLint length = 0;
-			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+			GL::GetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
 
 			if (length > 1) {
 				std::string log(length, '\0');
-				glGetShaderInfoLog(shader, length, &length, &log[0]);
+				GL::GetShaderInfoLog(shader, length, &length, &log[0]);
 				printf("Shader compile failed:\n%s\n", log.c_str());
 			}
 			else {
@@ -106,21 +91,21 @@ bool InitializeShaders()
 			return false;
 		}
 
-		glAttachShader(program, shader);
+		GL::AttachShader(program, shader);
 	}
 
-	glLinkProgram(program);
+	GL::LinkProgram(program);
 
 	GLint linked = 0;
-	glGetProgramiv(program, GL_LINK_STATUS, &linked);
+	GL::GetProgramiv(program, GL_LINK_STATUS, &linked);
 
 	if (!linked) {
 		GLint length = 0;
-		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+		GL::GetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
 
 		if (length > 1) {
 			std::string log(length, '\0');
-			glGetProgramInfoLog(program, length, &length, &log[0]);
+			GL::GetProgramInfoLog(program, length, &length, &log[0]);
 			printf("Program link failed:\n%s", log.c_str());
 		}
 		else {
@@ -139,18 +124,18 @@ bool InitializeShaders()
 	};
 
 	GLuint vb;
-	glGenBuffers(1, &vb);
-	glBindBuffer(GL_ARRAY_BUFFER, vb);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	GL::GenBuffers(1, &vb);
+	GL::BindBuffer(GL_ARRAY_BUFFER, vb);
+	GL::BufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// initial state
-	glUseProgram(program);
+	GL::UseProgram(program);
 
-	GLint position = glGetAttribLocation(program, "position");
-	glEnableVertexAttribArray(position);
+	GLint position = GL::GetAttribLocation(program, "position");
+	GL::EnableVertexAttribArray(position);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vb);
-	glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	GL::BindBuffer(GL_ARRAY_BUFFER, vb);
+	GL::VertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	return true;
 }
@@ -161,12 +146,12 @@ bool InitializeShaders()
 
 void Render()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	GL::Clear(GL_COLOR_BUFFER_BIT);
+	GL::DrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 #define LOG_GL_STRING(name, stringName) \
-    SM_CUSTOM(TEXT_COLOR_BRIGHT_GREEN, name, reinterpret_cast<const char*>(glGetString(stringName)))
+    SM_CUSTOM(TEXT_COLOR_BRIGHT_GREEN, name, reinterpret_cast<const char*>(GL::GetString(stringName)))
 
 bool pong::PlayGame()
 {
@@ -183,8 +168,11 @@ bool pong::PlayGame()
 	}
 	/*
 	* Init() and Cleanup() of Graphics.cpp
-	HMODULE isOpenGLLibary = nullptr;
+	static HMODULE isOpenGLLibary = nullptr;
+
 	isOpenGLLibary = LoadLibraryA("OpenGL32.dll");
+	SM_ASSERT(isOpenGLLibary,"Failed to load OpenGL");
+
 	FreeLibrary(isOpenGLLibary);
 	isOpenGLLibary = nullptr;
 	*/
@@ -201,24 +189,9 @@ bool pong::PlayGame()
 	//printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
 
 	// initialize OpenGL function pointers
+	GL::LoadOpenGLFunction();
 
-	glCreateProgram = (PFNGLCREATEPROGRAMPROC)GL::get_function_pointer("glCreateProgram");
-	glCreateShader = (PFNGLCREATESHADERPROC)GL::get_function_pointer("glCreateShader");
-	glShaderSource = (PFNGLSHADERSOURCEPROC)GL::get_function_pointer("glShaderSource");
-	glCompileShader = (PFNGLCOMPILESHADERPROC)GL::get_function_pointer("glCompileShader");
-	glGetShaderiv = (PFNGLGETSHADERIVPROC)GL::get_function_pointer("glGetShaderiv");
-	glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)GL::get_function_pointer("glGetShaderInfoLog");
-	glAttachShader = (PFNGLATTACHSHADERPROC)GL::get_function_pointer("glAttachShader");
-	glLinkProgram = (PFNGLLINKPROGRAMPROC)GL::get_function_pointer("glLinkProgram");
-	glGetProgramiv = (PFNGLGETPROGRAMIVPROC)GL::get_function_pointer("glGetProgramiv");
-	glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)GL::get_function_pointer("glGetProgramInfoLog");
-	glUseProgram = (PFNGLUSEPROGRAMPROC)GL::get_function_pointer("glUseProgram");
-	glGenBuffers = (PFNGLGENBUFFERSPROC)GL::get_function_pointer("glGenBuffers");
-	glBindBuffer = (PFNGLBINDBUFFERPROC)GL::get_function_pointer("glBindBuffer");
-	glBufferData = (PFNGLBUFFERDATAPROC)GL::get_function_pointer("glBufferData");
-	glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)GL::get_function_pointer("glGetAttribLocation");
-	glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)GL::get_function_pointer("glEnableVertexAttribArray");
-	glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)GL::get_function_pointer("glVertexAttribPointer");
+	
 
 	if (!InitializeShaders()) {
 		printf("Scene initialization failed.\n");
