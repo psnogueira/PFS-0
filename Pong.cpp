@@ -11,214 +11,42 @@
 #error Unsupported platform
 #endif
 
+#include <Windows.h>
 #include <set>
 #include <utility>
 #include <string>
 #include <vector>
-#include <Windows.h>
 #include <iostream>
+
 #include "Pong.hpp"
 #include "Log.hpp"
-
-#include <GL/gl.h>
-#include <GL/glext.h>
-
 #include "GL.hpp"
 
  ///
- /// OpenGL functions declarations
+ /// Important variables
  ///
 
+ // WinSize
+ // static constexpr Vector2i skWinSize = {1280, 720};
 
+static bool sInitialized = false;
+static bool sRunning = false;
 
+// Window & Context
+platform_window_t* sWindow;
+static HWND sWindow2;
+static CONTEXT sContext;
 
-bool InitializeShaders()
-{
-	// shaders
+// Game state
+static bool sPlaying = false;
+static unsigned s_PlayerScores[] = { 0u, 0u };
 
-	std::vector<std::pair<GLenum, std::string>> shaders = {
-		{
-			GL_VERTEX_SHADER,
-			"#version 130\n"
-			"in vec4 position;\n"
-			"out vec2 uv;\n"
-			"\n"
-			"void main() {\n"
-			"  gl_Position = position;\n"
-			"  uv = (position.xy + 1.0) / 2.0;\n"
-			"}\n"
-		},
-		{
-			GL_FRAGMENT_SHADER,
-			"#version 130\n"
-			"in vec2 uv;\n"
-			"out vec4 color;\n"
-			"\n"
-			"void main() {\n"
-			"  color = vec4(uv, 0.0, 1.0);\n"
-			"}\n"
-		},
-	};
+// Ball
 
-	GLuint program = GL::CreateProgram();
-
-	for (const auto& s : shaders) {
-		GLenum type = s.first;
-		const std::string& source = s.second;
-
-		const GLchar* src = source.c_str();
-
-		GLuint shader = GL::CreateShader(type);
-		GL::ShaderSource(shader, 1, &src, nullptr);
-
-		GL::CompileShader(shader);
-
-		GLint compiled = 0;
-		GL::GetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-		if (!compiled) {
-			GLint length = 0;
-			GL::GetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-
-			if (length > 1) {
-				std::string log(length, '\0');
-				GL::GetShaderInfoLog(shader, length, &length, &log[0]);
-				printf("Shader compile failed:\n%s\n", log.c_str());
-			}
-			else {
-				printf("Shader compile failed.\n");
-			}
-
-			return false;
-		}
-
-		GL::AttachShader(program, shader);
-	}
-
-	GL::LinkProgram(program);
-
-	GLint linked = 0;
-	GL::GetProgramiv(program, GL_LINK_STATUS, &linked);
-
-	if (!linked) {
-		GLint length = 0;
-		GL::GetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-
-		if (length > 1) {
-			std::string log(length, '\0');
-			GL::GetProgramInfoLog(program, length, &length, &log[0]);
-			printf("Program link failed:\n%s", log.c_str());
-		}
-		else {
-			printf("Program link failed.\n");
-		}
-
-		return false;
-	}
-
-	// vertex buffer
-
-	float vertices[] = {
-		-1.0f, 1.0f,
-		-1.0f, -1.0f,
-		1.0f, -1.0f
-	};
-
-	GLuint vb;
-	GL::GenBuffers(1, &vb);
-	GL::BindBuffer(GL_ARRAY_BUFFER, vb);
-	GL::BufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// initial state
-	GL::UseProgram(program);
-
-	GLint position = GL::GetAttribLocation(program, "position");
-	GL::EnableVertexAttribArray(position);
-
-	GL::BindBuffer(GL_ARRAY_BUFFER, vb);
-	GL::VertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	return true;
-}
-
-/// 
-/// Render
-///
-
-void Render()
-{
-	GL::Clear(GL_COLOR_BUFFER_BIT);
-	GL::DrawArrays(GL_TRIANGLES, 0, 3);
-}
+// Paddles
 
 #define LOG_GL_STRING(name, stringName) \
-    SM_CUSTOM(TEXT_COLOR_BRIGHT_GREEN, name, reinterpret_cast<const char*>(GL::GetString(stringName)))
-
-bool pong::PlayGame()
-{
-	const unsigned int client_width = 512;
-	const unsigned int client_height = 512;
-
-	Window::Init();
-
-	platform_window_t* window = Window::create_window("Ola, Mundo!", client_width, client_height);
-	
-	if (!window) {
-		printf("Failed to create window.\n");
-		return false;
-	}
-	/*
-	* Init() and Cleanup() of Graphics.cpp
-	static HMODULE isOpenGLLibary = nullptr;
-
-	isOpenGLLibary = LoadLibraryA("OpenGL32.dll");
-	SM_ASSERT(isOpenGLLibary,"Failed to load OpenGL");
-
-	FreeLibrary(isOpenGLLibary);
-	isOpenGLLibary = nullptr;
-	*/
-
-	//auto versao = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-
-	//SM_CUSTOM(TEXT_COLOR_BRIGHT_GREEN, "GL_VENDOR: ", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
-	LOG_GL_STRING("GL_VENDOR: ", GL_VENDOR);
-	LOG_GL_STRING("GL_VERSION: ", GL_VERSION);
-	LOG_GL_STRING("GL_RENDERER: ", GL_RENDERER);
-
-	//printf("GL_VENDOR: %s\n", glGetString(GL_VENDOR));
-	//printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
-	//printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
-
-	// initialize OpenGL function pointers
-	GL::LoadOpenGLFunction();
-
-	
-
-	if (!InitializeShaders()) {
-		printf("Scene initialization failed.\n");
-		return false;
-	}
-	SM_TRACE("Inicializacao deu certo!");
-
-	while (true) {
-		bool quit = Window::handle_events(window);
-		if (quit) {
-			break;
-		}
-
-		Render();
-
-		//Window::swap(window);
-		GL::SwapBuffers(window);
-	}
-
-	Window::destroy_window(window);
-	
-	return true;
-}
-
- // Important variables
-static bool isInitialized = false;
-static bool isRunning = false;
+    SM_CUSTOM(TEXT_COLOR_BRIGHT_YELLOW, name, reinterpret_cast<const char*>(GL::GetString(stringName)))
 
 /// ! @brief A Class with the Init() and Cleanup() functions of any item.
 ///
@@ -319,19 +147,50 @@ bool TryInitItems(ConstArrayReference<Lifetime, NumItems> lifetimes) noexcept;
 /// 
 bool pong::Init() noexcept
 {
-	SM_TRACE("Init()");
+	SM_CUSTOM(TEXT_COLOR_BRIGHT_CYAN, "Initialization()", "");
 
 	// If the game is already initialized, this function returns false.
-	if (isInitialized)
+	if (sInitialized)
 	{
 		SM_WARN("Game has already initilized!");
 		return false;
 	}
 		
-	isInitialized = TryInitItems(kGameLifetimes);
-	//Window::Init();
-	return isInitialized;
+	sInitialized = TryInitItems(kGameLifetimes);
+
+	if (sInitialized)
+		SM_TRACE("Initialization was SUCCESSFUL!");
+	
+	return sInitialized;
 }
+
+///
+/// ------------------------- Init -------------------------
+/// 
+/// {InitGameSystems, CleanupGameSystems},
+/// {InitState, CleanupState}
+///
+/// -------------------- (InitGameSystems) --------------------
+/// 
+/// {WindowInit, WindowCleanup}, Registra Janela
+/// {GraphicsInit, GraphicsCleanup },
+/// {glInit, glCleanup },
+/// {TimeInit, TimeCleanup }
+///
+/// -------------------- (InitState) --------------------
+/// 
+/// {InitGameWindow, CleanupGameWindow},
+/// {InitContext, CleanupContext},
+/// {InitGraphicsResources, CleanupGraphicsResources }
+/// 
+/// ------------ (InitGraphicsResources) ------------
+/// 
+/// {InitPaddleProgram, CleanupPaddleProgram},
+/// {InitBallProgram, CleanupBallProgram},
+/// {InitQuad, CleanupQuad },
+/// {InitTextureQuad, CleanupTextureQuad }
+/// 
+/// 
 
 template<std::size_t NumItems>
 static void CleanupItemsStartingAt(ConstArrayReference<Lifetime, NumItems> lifetimes, unsigned index) noexcept;
@@ -507,16 +366,34 @@ void CleanupGameWindow() noexcept
 
 bool InitContext() noexcept
 {
-	return true;
+	//sContext = GL::MakeContext(sWindow);
+	//const bool kValid = sContext.IsValid();
+	const bool contextIsValid = true;
+
+	if (contextIsValid)
+	{
+		//GL::MakeContextCurrent(sContext);
+	}
+
+	return contextIsValid;
 }
+///MakeContext(sWindow)
+///MakeContextCurrent(sContext)
+///DestroyContext(sContext)
 
 void CleanupContext() noexcept
 {
-
+	//GL::DestroyContext(sContext);
 }
 
 bool InitGraphicsResources() noexcept
 {
+	// Initialize Shaders with OpenGL
+	if (!GL::InitializeShaders()) {
+		printf("Scene initialization failed.\n");
+		return false;
+	}
+
 	return true;
 }
 
@@ -538,6 +415,16 @@ void CleanupGraphicsResources() noexcept
 
 bool WindowInit() noexcept
 {
+	const unsigned int client_width = 512;
+	const unsigned int client_height = 512;
+
+	sWindow = Window::createWindow("Pong", client_width, client_height);
+
+	if (!sWindow) {
+		printf("Failed to create window.\n");
+		return false;
+	}
+
 	return true;
 }
 
@@ -546,8 +433,29 @@ void WindowCleanup() noexcept
 
 }
 
+/*
+	* Init() and Cleanup() of Graphics.cpp
+	
+	// Init
+	//
+
+	static HMODULE isOpenGLLibary = nullptr;
+
+	isOpenGLLibary = LoadLibraryA("OpenGL32.dll");
+	SM_ASSERT(isOpenGLLibary,"Failed to load OpenGL");
+
+	// Cleanup
+	//
+
+	FreeLibrary(isOpenGLLibary);
+	isOpenGLLibary = nullptr;
+
+	*/
+
 bool GraphicsInit() noexcept
 {
+
+
 	return true;
 }
 
@@ -558,6 +466,10 @@ void GraphicsCleanup() noexcept
 
 bool glInit() noexcept
 {
+	// Initialize OpenGL function pointers
+	if (!GL::LoadOpenGLFunction())
+		return false;
+
 	return true;
 }
 void glCleanup() noexcept
@@ -583,16 +495,26 @@ static void OnRender() noexcept;
 
 void pong::Run() noexcept
 {
-	SM_TRACE("Run()");
+	SM_CUSTOM(TEXT_COLOR_BRIGHT_CYAN, "Run()", "");
 
+	sRunning = true;
 	OnBeginRun();
 
-	while (isRunning)
+	SM_CUSTOM(TEXT_COLOR_BRIGHT_CYAN, "Main Loop", "");
+	while (sRunning)
 	{
 		const float deltaTime = GetDeltaTime();
 
+		bool quit = Window::handleEvents(sWindow);
+		if (quit) {
+			break;
+		}
+
 		OnUpdate(deltaTime);
 		OnRender();
+
+		//Window::swap(window);
+		GL::SwapBuffers(sWindow);
 	}
 
 	OnFinishRun();
@@ -602,7 +524,7 @@ void LogContextSpecifications() noexcept;
 
 static void OnBeginRun() noexcept
 {
-	SM_TRACE("OnBeginRun()");
+	SM_CUSTOM(TEXT_COLOR_BRIGHT_CYAN, "OnBeginRun()", "");
 	// Show Window
 	// Set Window Resizible (false)
 
@@ -617,21 +539,23 @@ static void OnBeginRun() noexcept
 
 void LogContextSpecifications() noexcept
 {
-	LOG_GL_STRING("GL_VENDOR2: ", GL_VENDOR);
-	LOG_GL_STRING("GL_VERSION2: ", GL_VERSION);
-	LOG_GL_STRING("GL_RENDERER2: ", GL_RENDERER);
+	LOG_GL_STRING("GL_VENDOR: ", GL_VENDOR);
+	LOG_GL_STRING("GL_VERSION: ", GL_VERSION);
+	LOG_GL_STRING("GL_RENDERER: ", GL_RENDERER);
 }
 
 void OnFinishRun() noexcept
 {
-	SM_TRACE("OnFinishRun()");
+	SM_CUSTOM(TEXT_COLOR_BRIGHT_CYAN, "OnFinishRun()", "");
 
 }
 
 void pong::Cleanup() noexcept
 {
 	//std::cout << "Cleanup()" << std::endl;
-	SM_TRACE("Cleanup()");
+	SM_CUSTOM(TEXT_COLOR_BRIGHT_CYAN, "Cleanup()", "");
+
+	Window::destroyWindow(sWindow);
 
 }
 
@@ -674,7 +598,7 @@ float GetDeltaTime() noexcept
 void OnUpdate(float deltaTime) noexcept
 {
 	// Delta time (float deltaTime)
-	// isRunning = Window::PollEvents();
+	// sRunning = Window::PollEvents();
 
 	// Update Ball
 
@@ -689,7 +613,8 @@ void OnUpdate(float deltaTime) noexcept
 
 void OnRender() noexcept
 {
-
+	GL::Clear(GL_COLOR_BUFFER_BIT);
+	GL::DrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 // UpdateScores(Side lostSide)

@@ -1,9 +1,14 @@
 #include "Window.hpp"
 #include "Log.hpp"
 
-static bool isInitilized = false;
+///
+/// Important variables
+///
 
-platform_window_t* Window::create_window(const std::string& title, unsigned int width, unsigned int height)
+static bool isInitilized = false;
+static const std::string& title2 = "";
+
+platform_window_t* Window::createWindow(const std::string& title, unsigned int width, unsigned int height)
 {
     WNDPROC window_proc = [](HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) -> LRESULT {
         if (message == WM_CLOSE || (message == WM_KEYDOWN && wparam == VK_ESCAPE)) {
@@ -19,12 +24,12 @@ platform_window_t* Window::create_window(const std::string& title, unsigned int 
         return DefWindowProc(hwnd, message, wparam, lparam);
     };
 
-    std::string window_class = title + " class";
+    std::string windowClassName = title + " class";
 
     WNDCLASS wc = {};
     wc.lpfnWndProc = window_proc;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.lpszClassName = window_class.c_str();
+    wc.lpszClassName = windowClassName.c_str();
     RegisterClass(&wc);
     ///
     /// End of Register Window Class
@@ -35,16 +40,13 @@ platform_window_t* Window::create_window(const std::string& title, unsigned int 
     RECT wr = { 0, 0, (LONG)width, (LONG)height };
     AdjustWindowRect(&wr, dwStyle, FALSE);
 
-    HWND hwnd = CreateWindow(window_class.c_str(), title.c_str(), dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, NULL, NULL);
+    HWND hwnd = CreateWindow(windowClassName.c_str(), title.c_str(), dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, NULL, NULL);
     if (!hwnd) {
-        UnregisterClass(window_class.c_str(), NULL);
+        UnregisterClass(windowClassName.c_str(), NULL);
         return nullptr;
     }
 
     HDC dc = GetDC(hwnd);
-
-    // OpenGL context
-
 
     /// 
     /// Pixel Format
@@ -69,17 +71,6 @@ platform_window_t* Window::create_window(const std::string& title, unsigned int 
             0, 0, 0
     };
 
-    /*
-
-    PIXELFORMATDESCRIPTOR pfd2 = {};
-    pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    pfd.nVersion = 1;
-    pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_GENERIC_ACCELERATED | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
-    pfd.iPixelType = PFD_TYPE_RGBA;
-    pfd.cColorBits = 32;
-
-    */
-
     int pixelFormat = ChoosePixelFormat(dc, &pfd);
     if (pixelFormat == 0) {
         return nullptr;
@@ -100,14 +91,14 @@ platform_window_t* Window::create_window(const std::string& title, unsigned int 
 
     platform_window_t* window = new platform_window_t;
     window->handle = hwnd;
-    window->cls = window_class;
+    window->cls = windowClassName;
     window->dc = dc;
     window->rc = rc;
 
     return window;
 }
 
-void Window::destroy_window(platform_window_t* window)
+void Window::destroyWindow(platform_window_t* window)
 {
     wglMakeCurrent(NULL, NULL);
     wglDeleteContext(window->rc);
@@ -119,7 +110,7 @@ void Window::destroy_window(platform_window_t* window)
     delete window;
 }
 
-bool Window::handle_events(platform_window_t*)
+bool Window::handleEvents(platform_window_t*)
 {
     MSG msg = {};
     if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -167,7 +158,11 @@ bool Window::Init() noexcept
 
 void Window::Cleanup() noexcept
 {
-    return;
+    if (isInitilized)
+        return;
+
+    //UnregisterClassW();
+    isInitilized = false;
 }
 
 static bool RegisterWindowClass() noexcept

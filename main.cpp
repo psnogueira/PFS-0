@@ -4,9 +4,8 @@
 
 int main()
 {
-    ///
-    /// Início da função main.cpp
-    ///
+    //Arrumar
+    // Arrumar
 
     if (!pong::Init())
     {
@@ -15,16 +14,6 @@ int main()
 
     pong::Run();
     pong::Cleanup();
-
-    ///
-    /// Fim da função main.cpp
-    ///
-
-    //
-    if (!pong::PlayGame())
-    {
-        return 1;
-    }
     
     return 0;
 }

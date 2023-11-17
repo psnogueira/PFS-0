@@ -7,7 +7,6 @@
 #include <GL/glext.h>
 #include <string>
 
-
 struct platform_window_t
 {
     HWND handle;
@@ -22,15 +21,12 @@ namespace Window
 
     void Cleanup() noexcept;
 
-    platform_window_t* create_window(const std::string& title, unsigned int width, unsigned int height);
+    platform_window_t* createWindow(const std::string& title, unsigned int width, unsigned int height);
     
-
-    void destroy_window(platform_window_t* window);
+    void destroyWindow(platform_window_t* window);
     
-
-    bool handle_events(platform_window_t*);
+    bool handleEvents(platform_window_t*);
     
-
     void* get_gl_function_pointer(const std::string& name);
     
     //
