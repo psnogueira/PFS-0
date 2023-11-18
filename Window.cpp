@@ -1,15 +1,21 @@
 #include "Window.hpp"
 #include "Log.hpp"
 
+namespace Window
+{
+
 ///
 /// Important variables
 ///
-
 static bool isInitilized = false;
-static const std::string& title2 = "";
+static const std::string& sTitle = "Pong";
+static const std::string& sWindowClassName = "Pong class";
 
-platform_window_t* Window::createWindow(const std::string& title, unsigned int width, unsigned int height)
+static bool RegisterWindowClass()
 {
+    ///
+    /// Procedure called to every message sent to the window.
+    /// 
     WNDPROC window_proc = [](HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) -> LRESULT {
         if (message == WM_CLOSE || (message == WM_KEYDOWN && wparam == VK_ESCAPE)) {
             PostQuitMessage(0);
@@ -24,25 +30,39 @@ platform_window_t* Window::createWindow(const std::string& title, unsigned int w
         return DefWindowProc(hwnd, message, wparam, lparam);
     };
 
-    std::string windowClassName = title + " class";
-
+    ///
+    /// Register the Window Class
+    /// 
+    
     WNDCLASS wc = {};
     wc.lpfnWndProc = window_proc;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.lpszClassName = windowClassName.c_str();
-    RegisterClass(&wc);
-    ///
-    /// End of Register Window Class
-    ///
+    wc.lpszClassName = sWindowClassName.c_str();
+    return RegisterClass(&wc);
+}
+
+platform_window_t* createWindow(unsigned int width, unsigned int height)
+{
+    // Window need to be registered before beeing created.
+    RegisterWindowClass();
 
     DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
     RECT wr = { 0, 0, (LONG)width, (LONG)height };
     AdjustWindowRect(&wr, dwStyle, FALSE);
 
-    HWND hwnd = CreateWindow(windowClassName.c_str(), title.c_str(), dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, NULL, NULL);
+    HWND hwnd = CreateWindow(
+        sWindowClassName.c_str(), 
+        sTitle.c_str(), 
+        dwStyle, 
+        CW_USEDEFAULT, CW_USEDEFAULT, 
+        wr.right - wr.left, 
+        wr.bottom - wr.top, 
+        NULL, NULL, NULL, 
+        NULL);
+    
     if (!hwnd) {
-        UnregisterClass(windowClassName.c_str(), NULL);
+        UnregisterClass(sWindowClassName.c_str(), NULL);
         return nullptr;
     }
 
@@ -91,14 +111,14 @@ platform_window_t* Window::createWindow(const std::string& title, unsigned int w
 
     platform_window_t* window = new platform_window_t;
     window->handle = hwnd;
-    window->cls = windowClassName;
+    window->cls = sWindowClassName;
     window->dc = dc;
     window->rc = rc;
 
     return window;
 }
 
-void Window::destroyWindow(platform_window_t* window)
+void DestroyWindow(platform_window_t* window)
 {
     wglMakeCurrent(NULL, NULL);
     wglDeleteContext(window->rc);
@@ -110,7 +130,7 @@ void Window::destroyWindow(platform_window_t* window)
     delete window;
 }
 
-bool Window::handleEvents(platform_window_t*)
+bool HandleEvents(platform_window_t*)
 {
     MSG msg = {};
     if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -125,28 +145,18 @@ bool Window::handleEvents(platform_window_t*)
     return false;
 }
 
-void* Window::get_gl_function_pointer(const std::string& name)
+void* get_gl_function_pointer(const std::string& name)
 {
     return wglGetProcAddress(name.c_str());
 }
 
-void Window::swap(platform_window_t* window)
+void Swap(platform_window_t* window)
 {
     SwapBuffers(window->dc);
 }
 
-///
-/// 
-/// Important Window Functions
-/// 
-/// 
-
-static bool RegisterWindowClass() noexcept;
-
-bool Window::Init() noexcept
+bool Init() noexcept
 {
-    SM_ERROR("Init comecou");
-
     if (isInitilized)
         return false;
 
@@ -156,7 +166,7 @@ bool Window::Init() noexcept
     return isInitilized;
 }
 
-void Window::Cleanup() noexcept
+void Cleanup() noexcept
 {
     if (isInitilized)
         return;
@@ -165,8 +175,5 @@ void Window::Cleanup() noexcept
     isInitilized = false;
 }
 
-static bool RegisterWindowClass() noexcept
-{
-
-    return true;
 }
+

@@ -25,9 +25,9 @@ namespace GL
 
 	void SwapBuffers(platform_window_t* window);
 
-	//
-	// OpengGL functions
-	//
+	///
+	/// OpengGL functions
+	///
 
 	GLuint CreateProgram() noexcept;
 	void DeleteProgram(GLuint program) noexcept;

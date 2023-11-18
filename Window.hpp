@@ -21,16 +21,16 @@ namespace Window
 
     void Cleanup() noexcept;
 
-    platform_window_t* createWindow(const std::string& title, unsigned int width, unsigned int height);
+    platform_window_t* createWindow(unsigned int width, unsigned int height);
     
-    void destroyWindow(platform_window_t* window);
+    void DestroyWindow(platform_window_t* window);
     
-    bool handleEvents(platform_window_t*);
+    bool HandleEvents(platform_window_t*);
     
     void* get_gl_function_pointer(const std::string& name);
     
     //
-    void swap(platform_window_t* window);
+    void Swap(platform_window_t* window);
     
 }
 

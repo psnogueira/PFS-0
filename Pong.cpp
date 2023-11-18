@@ -339,15 +339,17 @@ void CleanupState() noexcept
 /// 
 /// <param name="key -> The pressed key's virtual key code."></param>
 /// <param name="pressed - > Whether the key was presssed."></param>
-static void OnKeyEvent(int key, bool pressed) noexcept;
+//static void OnKeyEvent(int key, bool pressed) noexcept;
 
 bool InitGameWindow() noexcept
 {
+	//Window::SetKeyCallback(OnKeyEvent);
+	//sWindow = Window::MakeWindow();
+
+	//return sWindow;
+
 	return true;
 }
-
-
-
 
 /// 
 /// All the game state Lifetimes Definitions
@@ -361,7 +363,7 @@ bool InitGameWindow() noexcept
 
 void CleanupGameWindow() noexcept
 {
-
+	//Window::DestroyWindow(sWindow);
 }
 
 bool InitContext() noexcept
@@ -418,7 +420,7 @@ bool WindowInit() noexcept
 	const unsigned int client_width = 512;
 	const unsigned int client_height = 512;
 
-	sWindow = Window::createWindow("Pong", client_width, client_height);
+	sWindow = Window::createWindow(client_width, client_height);
 
 	if (!sWindow) {
 		printf("Failed to create window.\n");
@@ -505,7 +507,7 @@ void pong::Run() noexcept
 	{
 		const float deltaTime = GetDeltaTime();
 
-		bool quit = Window::handleEvents(sWindow);
+		bool quit = Window::HandleEvents(sWindow);
 		if (quit) {
 			break;
 		}
@@ -555,7 +557,7 @@ void pong::Cleanup() noexcept
 	//std::cout << "Cleanup()" << std::endl;
 	SM_CUSTOM(TEXT_COLOR_BRIGHT_CYAN, "Cleanup()", "");
 
-	Window::destroyWindow(sWindow);
+	Window::DestroyWindow(sWindow);
 
 }
 

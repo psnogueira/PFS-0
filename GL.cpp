@@ -49,20 +49,26 @@ static PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = nullptr;
 //glEnableVertexAttribArray //
 //glVertexAttribPointer //
 //
-//glClear ? já tem, mas vou colocar mesmo assim (:
-//glDrawArrays ? já tem
+//glClear //
+//glDrawArrays //
 
 namespace GL
 {
-	static bool isInitialized = false;
+	static bool sInitialized = false;
 
 	bool Init() noexcept
 	{
-		if (isInitialized)
+		if (sInitialized)
 			return false;
 		
-		//isInitialized = LoadOpenGLFunction();
+		//const CONTEXT kContext = MakeDummyContext();
+		//MakeContextCurrent(kContext);
 
+		//sInitialized = LoadOpenGLFunction();
+		//DestroyDummyContext(kContext);
+		//SM_ASSERT(sInitialized, "Failed to load OpenGL functions");
+
+		//return sInitialized;
 		return true;
 	}
 
