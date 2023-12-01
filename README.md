@@ -1,4 +1,4 @@
-# Pong from Scratch
+# Pong from scratch
 
 This is a clone of the classic game Pong implemented in C++ using the Windows API for window management and OpenGL for rendering.
 
