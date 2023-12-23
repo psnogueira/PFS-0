@@ -5,8 +5,9 @@ namespace Window
 {
 
 ///
-/// Important variables
+/// Important variables.
 ///
+
 static bool isInitilized = false;
 static const std::string& sTitle = "Pong";
 static const std::string& sWindowClassName = "Pong class";
@@ -22,7 +23,7 @@ static bool RegisterWindowClass()
             return 0;
         }
 
-        // Allows clicking anywhere in the window to drag it around
+        // Allows clicking anywhere in the window to drag it around.
         if (message == WM_NCHITTEST) {
             return HTCAPTION;
         }
@@ -31,7 +32,7 @@ static bool RegisterWindowClass()
     };
 
     ///
-    /// Register the Window Class
+    /// Register the Window Class.
     /// 
     
     WNDCLASS wc = {};
@@ -43,7 +44,7 @@ static bool RegisterWindowClass()
 
 platform_window_t* createWindow(unsigned int width, unsigned int height)
 {
-    // Window need to be registered before beeing created.
+    // Window need to be registered before being created.
     RegisterWindowClass();
 
     DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
@@ -68,9 +69,7 @@ platform_window_t* createWindow(unsigned int width, unsigned int height)
 
     HDC dc = GetDC(hwnd);
 
-    /// 
-    /// Pixel Format
-    /// 
+    // Pixel Format.
     PIXELFORMATDESCRIPTOR pfd =
     {
         sizeof(PIXELFORMATDESCRIPTOR),
@@ -108,7 +107,8 @@ platform_window_t* createWindow(unsigned int width, unsigned int height)
     if (wglMakeCurrent(dc, rc) == FALSE) {
         return nullptr;
     }
-
+    
+    // Assigning the window's properties.
     platform_window_t* window = new platform_window_t;
     window->handle = hwnd;
     window->cls = sWindowClassName;
