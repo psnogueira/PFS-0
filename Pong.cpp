@@ -360,16 +360,6 @@ bool InitGameWindow() noexcept
 	return true;
 }
 
-/// 
-/// All the game state Lifetimes Definitions
-/// 
-/// {InitGameWindow, CleanupGameWindow},
-/// {InitContext, CleanupContext},
-/// {InitGraphicsResources, CleanupGraphicsResources }
-///  
-
-//InitGameWindow()
-
 void CleanupGameWindow() noexcept
 {
 	//Window::DestroyWindow(sWindow);
@@ -413,17 +403,6 @@ void CleanupGraphicsResources() noexcept
 {
 
 }
-
-
-/// 
-/// All the system Lifetimes Definitions
-/// 
-/// Log::Init, Log::Cleanup
-/// Window::Init, Window::Cleanup
-/// Graphics::Init, Graphics::Cleanup
-/// gl::Init, gl::Cleanup
-/// Time::Init, Time::Cleanup
-/// 
 
 /// ! @brief Initializes the dummy Window.
 /// 
@@ -553,10 +532,9 @@ void LogContextSpecifications() noexcept;
 static void OnBeginRun() noexcept
 {
 	SM_CUSTOM(TEXT_COLOR_BRIGHT_CYAN, "OnBeginRun()", "");
+	Window::SetWindowResizable(sWindow, false);
 	Window::ShowWindow(sWindow);
-	// Set Window Resizible (false)
-
-	// Log Context Specifications
+	
 	LogContextSpecifications();
 	
 	// Reset game state

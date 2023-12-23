@@ -23,9 +23,12 @@ static bool RegisterWindowClass()
             return 0;
         }
 
-        // Allows clicking anywhere in the window to drag it around.
-        if (message == WM_NCHITTEST) {
-            return HTCAPTION;
+        // If True, Allows clicking anywhere in the window to drag it around.
+        if(false)
+        {
+            if (message == WM_NCHITTEST) {
+                return HTCAPTION;
+            }
         }
 
         return DefWindowProc(hwnd, message, wparam, lparam);
@@ -122,7 +125,7 @@ platform_window_t* createWindow(unsigned int width, unsigned int height)
     return window;
 }
 
-void DestroyWindow(platform_window_t* window)
+void DestroyWindow(platform_window_t* window) noexcept
 {
     wglMakeCurrent(NULL, NULL);
     wglDeleteContext(window->rc);
@@ -134,9 +137,25 @@ void DestroyWindow(platform_window_t* window)
     delete window;
 }
 
-bool ShowWindow(platform_window_t* window)
+bool ShowWindow(platform_window_t* window) noexcept
 {
     return ShowWindow(window->handle, SW_SHOW);
+}
+
+void SetWindowResizable(platform_window_t* window, bool resizable) noexcept
+{
+    const DWORD dwCurrentStyle = GetWindowLongW(window->handle, GWL_STYLE);
+    DWORD dwResizableStyle = WS_MAXIMIZEBOX | WS_THICKFRAME;
+    
+    DWORD dwStyle;
+
+    //  If 'resizable' is true, the window style will have the dwResizableStyle bit set, allowing the window to be resized.
+    if (resizable) dwStyle = dwCurrentStyle | dwResizableStyle;
+
+    // If 'resizable' is false, the window style will have the dwResizableStyle bit toggled off, disallowing the window to be resized.
+    else dwStyle = dwCurrentStyle ^ dwResizableStyle;
+
+    SetWindowLongW(window->handle, GWL_STYLE, dwStyle);
 }
 
 bool HandleEvents(platform_window_t*)

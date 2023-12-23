@@ -23,10 +23,12 @@ namespace Window
 
     platform_window_t* createWindow(unsigned int width, unsigned int height);
     
-    void DestroyWindow(platform_window_t* window);
+    void DestroyWindow(platform_window_t* window) noexcept;
     
-    bool ShowWindow(platform_window_t* window);
+    bool ShowWindow(platform_window_t* window) noexcept;
     
+    void SetWindowResizable(platform_window_t* window, bool resizable) noexcept;
+
     bool HandleEvents(platform_window_t*);
     
     void* get_gl_function_pointer(const std::string& name);
