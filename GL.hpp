@@ -32,6 +32,10 @@ namespace GL
 	GLuint CreateProgram() noexcept;
 	void DeleteProgram(GLuint program) noexcept;
 
+	HGLRC MakeContext(platform_window_t* window) noexcept;
+	bool DeleteContext(HGLRC context) noexcept;
+	bool MakeContextCurrent(platform_window_t* window, HGLRC context) noexcept;
+
 	const GLubyte* GetString(GLenum name) noexcept;
 
 	GLuint CreateShader(GLenum shaderType) noexcept;

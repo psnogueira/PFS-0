@@ -4,7 +4,8 @@
 /// 1- SM_TRACE(message, ...)
 /// 2- SM_WARNING(message, ...)
 /// 3- SM_ERROR(message, ...)
-/// 4- SM_ASSERT(X, message, ...)
+/// 4- SM_CUSTOM(color, title, message, ...)
+/// 5- SM_ASSERT(X, message, ...)
 /// 
 
 #pragma once

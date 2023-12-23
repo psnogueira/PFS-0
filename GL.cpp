@@ -108,8 +108,7 @@ namespace GL
 
 	bool InitializeShaders()
 	{
-		// shaders
-
+		// Shaders.
 		std::vector<std::pair<GLenum, std::string>> shaders = {
 			{
 				GL_VERTEX_SHADER,
@@ -189,7 +188,7 @@ namespace GL
 			return false;
 		}
 
-		// vertex buffer
+		// Vertex buffer.
 
 		float vertices[] = {
 			-1.0f, 1.0f,
@@ -202,7 +201,7 @@ namespace GL
 		GL::BindBuffer(GL_ARRAY_BUFFER, vb);
 		GL::BufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-		// initial state
+		// Initial state.
 		GL::UseProgram(program);
 
 		GLint position = GL::GetAttribLocation(program, "position");
@@ -233,6 +232,34 @@ namespace GL
 	void DeleteProgram(GLuint program) noexcept
 	{
 		glDeleteProgram(program);
+	}
+
+	HGLRC MakeContext(platform_window_t* window) noexcept
+	{
+		HGLRC context = wglCreateContext(window->dc);
+		if (!context) {
+			SM_ASSERT(false, "Failed to create Render context");
+			return nullptr;
+		}
+		
+		window->rc = context;
+
+		return context;
+	}
+
+	bool DeleteContext(HGLRC context) noexcept
+	{
+		return wglDeleteContext(context);
+	}
+
+	bool MakeContextCurrent(platform_window_t* window, HGLRC context) noexcept
+	{
+		if (!wglMakeCurrent(window->dc, context))
+		{
+			SM_ASSERT(false, "Failed to make current");
+			return false;
+		}
+		return true;
 	}
 
 	const GLubyte* GetString(GLenum name) noexcept

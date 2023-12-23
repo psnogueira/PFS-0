@@ -47,7 +47,7 @@ platform_window_t* createWindow(unsigned int width, unsigned int height)
     // Window need to be registered before being created.
     RegisterWindowClass();
 
-    DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+    DWORD dwStyle = WS_OVERLAPPEDWINDOW;
 
     RECT wr = { 0, 0, (LONG)width, (LONG)height };
     AdjustWindowRect(&wr, dwStyle, FALSE);
@@ -92,23 +92,27 @@ platform_window_t* createWindow(unsigned int width, unsigned int height)
 
     int pixelFormat = ChoosePixelFormat(dc, &pfd);
     if (pixelFormat == 0) {
+        SM_ASSERT(false, "Failed to choose pixel format");
         return nullptr;
     }
 
     if (SetPixelFormat(dc, pixelFormat, &pfd) == FALSE) {
+        SM_ASSERT(false, "Failed to set pixel format");
         return nullptr;
     }
 
     HGLRC rc = wglCreateContext(dc);
     if (!rc) {
+        SM_ASSERT(false, "Failed to create Render context");
         return nullptr;
     }
 
     if (wglMakeCurrent(dc, rc) == FALSE) {
+        SM_ASSERT(false, "Failed to make current");
         return nullptr;
     }
     
-    // Assigning the window's properties.
+    // Assigning the window's properties. 
     platform_window_t* window = new platform_window_t;
     window->handle = hwnd;
     window->cls = sWindowClassName;
@@ -128,6 +132,11 @@ void DestroyWindow(platform_window_t* window)
     UnregisterClass(window->cls.c_str(), NULL);
 
     delete window;
+}
+
+bool ShowWindow(platform_window_t* window)
+{
+    return ShowWindow(window->handle, SW_SHOW);
 }
 
 bool HandleEvents(platform_window_t*)

@@ -35,7 +35,7 @@ static bool sRunning = false;
 // Window & Context
 platform_window_t* sWindow;
 static HWND sWindow2;
-static CONTEXT sContext;
+static HGLRC sContext;
 
 // Game state
 static bool sPlaying = false;
@@ -343,10 +343,19 @@ void CleanupState() noexcept
 
 bool InitGameWindow() noexcept
 {
-	//Window::SetKeyCallback(OnKeyEvent);
-	//sWindow = Window::MakeWindow();
+	SM_TRACE("InitGameWindow()");
 
-	//return sWindow;
+	//Window::SetKeyCallback(OnKeyEvent);
+	
+	const unsigned int window_width = 1024;
+	const unsigned int window_height = 512;
+
+	sWindow = Window::createWindow(window_width, window_height);
+
+	if (!sWindow) {
+		printf("Failed to create window.\n");
+		return false;
+	}
 
 	return true;
 }
@@ -368,24 +377,25 @@ void CleanupGameWindow() noexcept
 
 bool InitContext() noexcept
 {
-	//sContext = GL::MakeContext(sWindow);
-	//const bool kValid = sContext.IsValid();
-	const bool contextIsValid = true;
+	SM_TRACE("InitContext()");
+
+	sContext = GL::MakeContext(sWindow);
+	const bool contextIsValid = sContext;
 
 	if (contextIsValid)
 	{
-		//GL::MakeContextCurrent(sContext);
+		GL::MakeContextCurrent(sWindow, sContext);
 	}
 
 	return contextIsValid;
 }
 ///MakeContext(sWindow)
 ///MakeContextCurrent(sContext)
-///DestroyContext(sContext)
+///DeleteContext(sContext)
 
 void CleanupContext() noexcept
 {
-	//GL::DestroyContext(sContext);
+	GL::DeleteContext(sContext);
 }
 
 bool InitGraphicsResources() noexcept
@@ -415,24 +425,31 @@ void CleanupGraphicsResources() noexcept
 /// Time::Init, Time::Cleanup
 /// 
 
+/// ! @brief Initializes the dummy Window.
+/// 
+/// Creates a dummy window and a dummy context for OpenGL Initialization.
+///  
+/// @return Whether the dummy window was successfully initialized.
+/// 
 bool WindowInit() noexcept
 {
-	const unsigned int client_width = 512;
-	const unsigned int client_height = 512;
+	SM_TRACE("WindowInit()");
+	const unsigned int window_width = 512;
+	const unsigned int window_height = 512;
 
-	sWindow = Window::createWindow(client_width, client_height);
-
+	sWindow = Window::createWindow(window_width, window_height);
+	
 	if (!sWindow) {
 		printf("Failed to create window.\n");
 		return false;
 	}
-
+	
 	return true;
 }
 
 void WindowCleanup() noexcept
 {
-
+	Window::DestroyWindow(sWindow);
 }
 
 /*
@@ -456,7 +473,7 @@ void WindowCleanup() noexcept
 
 bool GraphicsInit() noexcept
 {
-
+	SM_TRACE("GraphicsInit()");
 
 	return true;
 }
@@ -468,10 +485,17 @@ void GraphicsCleanup() noexcept
 
 bool glInit() noexcept
 {
-	// Initialize OpenGL function pointers
-	if (!GL::LoadOpenGLFunction())
-		return false;
+	SM_TRACE("glInit()");
 
+	// Initialize OpenGL function pointers 
+	if (!GL::LoadOpenGLFunction())
+	{
+		SM_ASSERT(false, "Failed to load OpenGL Functions");
+		return false;
+	}
+
+	Window::DestroyWindow(sWindow);
+	
 	return true;
 }
 void glCleanup() noexcept
@@ -481,6 +505,8 @@ void glCleanup() noexcept
 
 bool TimeInit() noexcept
 {
+	SM_TRACE("TimeInit()");
+
 	return true;
 }
 
@@ -527,7 +553,7 @@ void LogContextSpecifications() noexcept;
 static void OnBeginRun() noexcept
 {
 	SM_CUSTOM(TEXT_COLOR_BRIGHT_CYAN, "OnBeginRun()", "");
-	// Show Window
+	Window::ShowWindow(sWindow);
 	// Set Window Resizible (false)
 
 	// Log Context Specifications

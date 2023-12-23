@@ -25,6 +25,8 @@ namespace Window
     
     void DestroyWindow(platform_window_t* window);
     
+    bool ShowWindow(platform_window_t* window);
+    
     bool HandleEvents(platform_window_t*);
     
     void* get_gl_function_pointer(const std::string& name);
